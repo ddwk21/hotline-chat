@@ -1,0 +1,173 @@
+#root{
+  overflow: hidden;
+}
+
+body{
+  height: 100vh;
+  width: 100vw;
+}
+
+.loginForm{
+  background-color: rgb(46, 78, 90);
+  border-radius: 10px;
+  height: 50vh;
+  width: 50vw;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+}
+
+.inputs{
+  flex: 1 1 70%;
+  display: flex;
+  flex-direction: column;
+  margin-left: 50px;
+  margin-right: 50px;
+  justify-content: center;
+  gap: 50px;
+}
+
+.inputs input{
+  height: 50px;
+  border-radius: 10px;
+  background-color: rgb(147, 182, 207);
+  font-size: 18px;
+}
+
+.buttons{
+  margin-left: 50px;
+  margin-right: 50px;
+  flex: 1 1 30%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.buttons button{
+  width: 350px;
+}
+
+.mainParent{
+  width: 100vw;
+  height: 100vh;
+  background: #273f48;
+  display: flex;
+}
+
+.sidebar{
+  width: 30%;
+  max-width: 380px;
+  height: 100%;
+  background-color: #21353d;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar button{
+  margin: 10px;
+}
+
+.messages{
+  width: 100%;
+  height: 100%;
+  background-color:#21353d;
+  margin-top: 10px;
+  margin-left: 10px;
+  padding: 50px;
+  border-radius: 10px;
+  position: relative;
+  
+
+}
+
+.messageContainer{
+  height: 80%;
+  overflow-y: scroll;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+}
+
+.message{
+  background-color: #a6d9da;;
+  border-radius: 10px;
+  padding: 5px;
+  min-height: 50px;
+  width: 60%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-top: 60px;
+}
+.messageTail{
+  position: absolute;
+  background-color: inherit;
+  width: 10px;
+  height: 10px;
+  top: 65%;
+  left: -3px;
+  transform: rotate(45deg);
+}
+
+.messages form{
+  height: 30px;
+  position: absolute;
+  top: 86%;
+  width: 50%;
+  left: 25%;
+  height: 50px;
+  border-radius: 10px;
+  background-color: #1b2226;
+  border: none;
+  
+  
+  padding-left: 50px;
+  
+}
+
+.messages form input {
+  background-color: #1b2226;
+  height: 30px;
+  width: 100%;
+  outline: none;
+  border: none;
+  padding: 10px;
+  margin-left: -8.7%;
+  color: #a6d9da;
+  font-size: 15px;
+}
+
+.messages form button {
+  position: absolute;
+  height: 40px;
+  width: 30px;
+  top: 50%;
+  left: 90%;
+  transform: translateY(-50%);
+  border-radius: 50%;
+}
+
+
+
+.messageContainer::-webkit-scrollbar{
+  width: 3px;
+  height: 80%;
+  margin-right: 3px;
+
+}
+.messageContainer::-webkit-scrollbar-thumb{
+  background-color:#408881;
+  height: 30px;
+  border-radius: 3px;
+}
+
+.sidebarRight{
+  width: 30%;
+  background-color: rgb(39, 53, 63);
+  margin-left: 10px;
+  margin-bottom: 0px;
+}

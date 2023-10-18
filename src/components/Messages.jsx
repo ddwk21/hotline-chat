@@ -1,33 +1,42 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useState } from 'react';
 import Message from './Message';
 import { auth, db} from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { addDoc, collection, onSnapshot, query, serverTimestamp, where} from 'firebase/firestore';
+import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, where} from 'firebase/firestore';
 
 
 
 const Messages = () => {
 
-    const room = 1;
+    const room = "1";
 
     const {logOut, currentUser} = useAuth()
 
     const [newMessage, setNewMessage] = useState("")
+    const [messages, setMessages] = useState([])
+
     const messagesRef = collection(db, "messages")
+    const messageContainerRef = useRef(null)
 
     useEffect(() => {
-        const messagesQuery = query(messagesRef, where("room", "==", room));
+        const messagesQuery = query(messagesRef, where("room", "==", room), orderBy("createdAt"));
         onSnapshot(messagesQuery, (snapshot) => {
             let messages = []
             snapshot.forEach((doc) => {
-                let message = doc.data()
-                messages.push(message)
+                let message = doc.data();
+                messages.push(message);
                 
             })
-            console.log(messages)
+            setMessages(messages);
+            console.log(messages);
+
+            if(messageContainerRef.current){
+                const element = messageContainerRef.current;
+                element.scrollTop = element.scrollHeight;
+            }
         })
-    })
+    },[])
 
     const handleSubmit = async (e) => {
 
@@ -43,7 +52,9 @@ const Messages = () => {
                 user: {
                     uid: currentUser.uid
                 },
+                createdAt: serverTimestamp(),
             })
+        setNewMessage('');
 
     };
 
@@ -62,16 +73,14 @@ const Messages = () => {
             </div>
             <div className="messages">
                 
-                <div className="messageContainer">
-                    <Message/>
-                    <Message/>
-                    <Message/>
-                    <Message/>
-                    <Message/>
+                <div className="messageContainer" ref={messageContainerRef}>
+                    {messages.map((message) => <Message text={message.text}/>)}
                 </div>
                 
                 <form onSubmit={handleSubmit} className="messageInput">
-                    <input type="text"
+                    <input 
+                        type="text"
+                        value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}/>
                     <button type="submit"></button>
                 </form>

@@ -1,5 +1,6 @@
 
 import './App.css'
+import { ChakraProvider } from '@chakra-ui/react'
 import Auth from './components/Auth'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import Messages from './components/Messages'
@@ -9,7 +10,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 function App() {
 
     return (
-        <AppBody />
+        <ChakraProvider>
+          <AppBody />
+        </ChakraProvider>
       )
 
 }

@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { useState } from 'react';
 import Message from './Message';
+import Friend from './Friend';
 import { auth, db} from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, where} from 'firebase/firestore';
+import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, where, getDocs} from 'firebase/firestore';
 
-import { Box, Button, Container, Flex, FormControl, IconButton, Input, InputGroup } from '@chakra-ui/react';
+import { Box, Button, Container, Flex, FormControl, IconButton, Input, InputGroup, Image, Center } from '@chakra-ui/react';
 
 
 
@@ -20,6 +21,13 @@ const Messages = () => {
 
     const messagesRef = collection(db, "messages")
     const messageContainerRef = useRef(null)
+
+    const userRef = collection(db, 'users')
+    
+    const [friendIds, setFriendIds] = useState([])
+    const [friends, setFriends] = useState([])
+    const friendsRef = collection(db, 'friends')
+    const friendListRef = useRef(null)
 
     useEffect(() => {
         const messagesQuery = query(messagesRef, where("room", "==", room), orderBy("createdAt"));
@@ -39,6 +47,35 @@ const Messages = () => {
             }
         })
     },[])
+
+    useEffect(() => {
+        // Fetch friendIds
+        const userFriendsQuery = query(friendsRef, where("user", "==", currentUser.uid));
+        const unsubscribe = onSnapshot(userFriendsQuery, (snapshot) => {
+            let userFriendIds = snapshot.docs.map(doc => doc.data().friends[0]); // Assuming there's always one friend
+            setFriendIds(userFriendIds);
+            console.log(userFriendIds)
+        });
+    
+        return () => unsubscribe(); // Cleanup the listener
+    }, [currentUser.uid]);
+
+    useEffect(() => {
+        if(friendIds.length === 0) return;
+    
+        // Fetch user details for each friendId
+        const fetchFriendsData = async () => {
+            let userfiedFriends = [];
+            for(let i = 0; i < friendIds.length; i++){
+                const userfyFriendsQuery = query(userRef, where("uid", "==", friendIds[i]));
+                const friendSnap = await getDocs(userfyFriendsQuery);
+                userfiedFriends.push(...friendSnap.docs.map(doc => doc.data()));
+            }
+            setFriends(userfiedFriends);
+        };
+        console.log(friends)
+        fetchFriendsData();
+    }, [friendIds]);
 
     const handleSubmit = async (e) => {
 
@@ -72,8 +109,33 @@ const Messages = () => {
     return ( 
         <Flex w='100%' justify='center' overflow='hidden' bg='gray.700'>
             <Flex w='100%' className='mainParent'>
-                <Flex direction='column' p='7' className="sidebar" w='15em' mr='3' h='100%' bg='gray.800'>
-                    <Button colorScheme='blue'  onClick={handleLogOut}>Logout</Button>
+                <Flex direction='column' p='7' className="sidebar" w='25em' minWidth='15em' mr='3' h='100%' bg='gray.800'>
+                    <Button bg={'gray.700'} color={'white'} _hover={{bg: 'gray.600'}} onClick={handleLogOut}>Logout</Button>
+                    <Box color='white' py={5}>
+                        <Center
+                            my={5}
+                        >
+                            <Image
+                            src={currentUser.photoURL}
+                            referrerPolicy='no-referrer'
+                            rounded={'3xl'}
+                            >
+
+                            </Image>
+                        </Center>
+                        <Center>
+                            <p>{currentUser.displayName}</p>
+                        </Center>
+
+                        {friends.map((friend) => <Friend name={friend.displayName} profilePhoto={friend.photoURL}></Friend>)}
+                        
+                    </Box>
+
+                    <Container
+                    color={'white'}
+                    >
+                        
+                    </Container>
                 </Flex>
                 <Box w='60em' className="messages">
                     

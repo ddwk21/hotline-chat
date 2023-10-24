@@ -12,7 +12,7 @@ import { Box, Button, Container, Flex, FormControl, IconButton, Input, InputGrou
 
 const Messages = () => {
 
-    const room = "1";
+    const [room, setRoom] = useState("1")
 
     const {logOut, currentUser} = useAuth()
 
@@ -46,7 +46,7 @@ const Messages = () => {
                 element.scrollTop = element.scrollHeight;
             }
         })
-    },[])
+    },[room])
 
     useEffect(() => {
         // Fetch friendIds
@@ -72,6 +72,7 @@ const Messages = () => {
                 userfiedFriends.push(...friendSnap.docs.map(doc => doc.data()));
             }
             setFriends(userfiedFriends);
+            console.log(userfiedFriends)
         };
         console.log(friends)
         fetchFriendsData();
@@ -106,6 +107,19 @@ const Messages = () => {
             console.error(err);
         }
     }
+
+    const handleChatRoom = (...ids) => {
+        const sortedIDs = ids.sort();
+
+        const chatID = sortedIDs.join('')
+
+        console.log(chatID)
+        setRoom(chatID);
+        console.log(room)
+    }
+    
+    
+    
     return ( 
         <Flex w='100%' justify='center' overflow='hidden' bg='gray.700'>
             <Flex w='100%' className='mainParent'>
@@ -127,7 +141,7 @@ const Messages = () => {
                             <p>{currentUser.displayName}</p>
                         </Center>
 
-                        {friends.map((friend) => <Friend name={friend.displayName} profilePhoto={friend.photoURL}></Friend>)}
+                        {friends.map((friend) => <Friend name={friend.displayName} profilePhoto={friend.photoURL} id={friend.uid} chatHandle={handleChatRoom}></Friend>)}
                         
                     </Box>
 

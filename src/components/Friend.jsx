@@ -10,7 +10,7 @@ const Friend = (props) => {
 
 
     return ( 
-        <Flex h={'80px'} bg={'gray.700'} rounded={'lg'} my={5} align={'center'} px={3} boxShadow={'md'} onClick={()=>props.chatHandle(props.id, currentUser.uid)}>
+        <Flex h={'80px'} bg={'gray.700'} _hover={{ transform: 'scale(103%)', transition:'.2s ease-in'}} transition={'.1s ease-in'} rounded={'lg'} my={5} align={'center'} px={3} boxShadow={'md'} onClick={()=>props.chatHandle(props.id, currentUser.uid)}>
             <Image
                 src={photoURL}
                 referrerPolicy='no-referrer'

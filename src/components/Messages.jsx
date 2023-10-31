@@ -4,9 +4,11 @@ import Message from './Message';
 import Friend from './Friend';
 import { auth, db} from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, where, getDocs} from 'firebase/firestore';
+import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, where, getDocs, or} from 'firebase/firestore';
 
-import { Box, Button, Container, Flex, FormControl, IconButton, Input, InputGroup, Image, Center } from '@chakra-ui/react';
+import { Box, Button, Container, Flex, FormControl, IconButton, Input, InputGroup, Image, Center, Text, Icon, transition } from '@chakra-ui/react';
+import {Search2Icon} from '@chakra-ui/icons'
+import { color } from 'framer-motion';
 
 
 
@@ -28,6 +30,8 @@ const Messages = () => {
     const [friends, setFriends] = useState([])
     const friendsRef = collection(db, 'friends')
     const friendListRef = useRef(null)
+
+    const [searchValue, setSearchValue] = useState('')
 
     useEffect(() => {
         const messagesQuery = query(messagesRef, where("room", "==", room), orderBy("createdAt"));
@@ -77,6 +81,21 @@ const Messages = () => {
         console.log(friends)
         fetchFriendsData();
     }, [friendIds]);
+
+
+
+    const searchData = async () => {
+        
+        let searchResult = [];
+
+        const searchQuery = query(userRef,
+            or(where('displayName', '==', searchValue),
+            where('email', '==', searchValue)))
+            const searchSnap = await getDocs(searchQuery);
+            searchResult.push(...searchSnap.docs.map(doc => doc.data()))
+            
+
+    }
 
     const handleSubmit = async (e) => {
 
@@ -137,9 +156,17 @@ const Messages = () => {
 
                             </Image>
                         </Center>
-                        <Center>
+                        <Center borderBottom='1px' borderColor={'gray.700'} pb={5}>
                             <p>{currentUser.displayName}</p>
                         </Center>
+                        <Flex alignItems={'center'} justifyContent={'space-between'} color={'gray.500'} py={3} position={'relative'}>
+                            
+                            <Input type='text' bg={'gray.700'} border={'none'} pr={10}></Input>
+                            <Icon as={Search2Icon} _hover={{color:'gray.400', transition:'0.3s ease-in'}} transition={'0.2s ease-in'} position={'absolute'} right={'4'} zIndex={'5'}/>
+
+                        </Flex>
+                        <Text my={5} fontWeight={'bold'}>Friends</Text>
+                        
 
                         {friends.map((friend) => <Friend name={friend.displayName} profilePhoto={friend.photoURL} id={friend.uid} chatHandle={handleChatRoom}></Friend>)}
                         

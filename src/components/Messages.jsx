@@ -44,34 +44,34 @@ const Messages = () => {
 
     const [searchValue, setSearchValue] = useState('')
 
-    useEffect(() => {
-        let cancel = false;
+    // useEffect(() => {
+    //     let cancel = false;
     
-        const fetchData = async () => {
-            if (search.length >= 4) {
-                const lowercasedSearch = search.toLowerCase();
-                const prefixQuery = query(userRef, where("prefixes", "array-contains", lowercasedSearch));
-                const querySnapshot = await getDocs(prefixQuery);
-                const users = [];
-                querySnapshot.forEach((doc) => {
-                    users.push(doc.data());
-                });
-                if (!cancel) {
-                    setSearchResults(users);
-                }
-            } else {
-                if (!cancel) {
-                    setSearchResults([]);
-                }
-            }
-        };
+    //     const fetchData = async () => {
+    //         if (search.length >= 4) {
+    //             const lowercasedSearch = search.toLowerCase();
+    //             const prefixQuery = query(userRef, where("prefixes", "array-contains", lowercasedSearch));
+    //             const querySnapshot = await getDocs(prefixQuery);
+    //             const users = [];
+    //             querySnapshot.forEach((doc) => {
+    //                 users.push(doc.data());
+    //             });
+    //             if (!cancel) {
+    //                 setSearchResults(users);
+    //             }
+    //         } else {
+    //             if (!cancel) {
+    //                 setSearchResults([]);
+    //             }
+    //         }
+    //     };
     
-        fetchData();
+    //     fetchData();
     
-        return () => {
-            cancel = true;
-        };
-    }, [search, userRef]);
+    //     return () => {
+    //         cancel = true;
+    //     };
+    // }, [search, userRef]);
 
     useEffect(() => {
         const messagesQuery = query(messagesRef, where("room", "==", room), orderBy("createdAt"));
@@ -94,9 +94,10 @@ const Messages = () => {
 
     useEffect(() => {
         // Fetch friendIds
+        console.log(currentUser.uid)
         const userFriendsQuery = query(friendsRef, where("user", "==", currentUser.uid));
         const unsubscribe = onSnapshot(userFriendsQuery, (snapshot) => {
-            let userFriendIds = snapshot.docs.map(doc => doc.data().friends[0]); // Assuming there's always one friend
+            let userFriendIds = snapshot.docs.flatMap(doc => doc.data().friends); // Assuming there's always one friend
             setFriendIds(userFriendIds);
             console.log(userFriendIds)
         });

@@ -12,6 +12,7 @@ const Auth = () => {
     const [userEmail, setUserEmail] = useState("");
     const [password, setPassword] = useState("");
     const [displayName, setDisplayName] = useState("");
+
     const {signUp, currentUser, logOut, signIn, googleSignIn} = useAuth();
     const navigate = useNavigate();
     const userRef = collection(db, 'users')
@@ -49,16 +50,26 @@ const Auth = () => {
 
             const newUser = await signUp(auth, userEmail, password);
             console.log(newUser);
-            console.log(newUser.user.uid)
+            console.log(newUser.uid)
+            const prefixes = (name) => {
+                let prefixArray = []
+                for(let i = 3; i< name.length; i++){
+                    let prefix = name.substring(0,i + 1);
+                    prefixArray.push(prefix);
+                }
+                return prefixArray;
+            }
+            let newUserPrefixArray = prefixes(displayName);
             await addDoc(userRef,
                 {
                     displayName: displayName,
-                    email: newUser.user.email,
-                    uid: newUser.user.uid,
+                    email: newUser.email,
+                    uid: newUser.uid,
+                    prefixes: newUserPrefixArray,
                 })
 
             await setDoc(doc(db, 'usernames', displayName), {
-                userId: newUser.user.uid
+                userId: newUser.uid
             })
             navigate('/')
         } catch (err) {

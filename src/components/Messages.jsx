@@ -6,7 +6,15 @@ import { auth, db} from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
 import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, where, getDocs, or} from 'firebase/firestore';
 
-import { Box, Button, Container, Flex, FormControl, IconButton, Input, InputGroup, Image, Center, Text, Icon, transition } from '@chakra-ui/react';
+import { Box, Button, Container, Flex, FormControl, IconButton, Input, InputGroup, Image, Center, Text, Icon, transition,   Popover,
+    PopoverTrigger,
+    PopoverContent,
+    PopoverHeader,
+    PopoverBody,
+    PopoverFooter,
+    PopoverArrow,
+    PopoverCloseButton,
+    PopoverAnchor,} from '@chakra-ui/react';
 import {Search2Icon} from '@chakra-ui/icons'
 import { color } from 'framer-motion';
 
@@ -21,6 +29,9 @@ const Messages = () => {
     const [newMessage, setNewMessage] = useState("")
     const [messages, setMessages] = useState([])
 
+    const [search, setSearch] = useState("")
+    const [searchResults, setSearchResults] = useState([])
+
     const messagesRef = collection(db, "messages")
     const messageContainerRef = useRef(null)
 
@@ -32,6 +43,35 @@ const Messages = () => {
     const friendListRef = useRef(null)
 
     const [searchValue, setSearchValue] = useState('')
+
+    useEffect(() => {
+        let cancel = false;
+    
+        const fetchData = async () => {
+            if (search.length >= 4) {
+                const lowercasedSearch = search.toLowerCase();
+                const prefixQuery = query(userRef, where("prefixes", "array-contains", lowercasedSearch));
+                const querySnapshot = await getDocs(prefixQuery);
+                const users = [];
+                querySnapshot.forEach((doc) => {
+                    users.push(doc.data());
+                });
+                if (!cancel) {
+                    setSearchResults(users);
+                }
+            } else {
+                if (!cancel) {
+                    setSearchResults([]);
+                }
+            }
+        };
+    
+        fetchData();
+    
+        return () => {
+            cancel = true;
+        };
+    }, [search, userRef]);
 
     useEffect(() => {
         const messagesQuery = query(messagesRef, where("room", "==", room), orderBy("createdAt"));
@@ -159,13 +199,40 @@ const Messages = () => {
                         <Center borderBottom='1px' borderColor={'gray.700'} pb={5}>
                             <p>{currentUser.displayName}</p>
                         </Center>
+                        
+                        
+                        
                         <Flex alignItems={'center'} justifyContent={'space-between'} color={'gray.500'} py={3} position={'relative'}>
                             
-                            <Input type='text' bg={'gray.700'} border={'none'} pr={10}></Input>
-                            <Icon as={Search2Icon} _hover={{color:'gray.400', transition:'0.3s ease-in'}} transition={'0.2s ease-in'} position={'absolute'} right={'4'} zIndex={'5'}/>
 
+                            <Popover>
+
+                                <Input type='text' bg={'gray.700'} border={'none'} pr={10} onChange={(e)=>setSearch(e.target.value)}></Input>
+                                
+                                <PopoverTrigger>
+                                    <Icon as={Search2Icon} _hover={{color:'gray.400', transition:'0.3s ease-in'}} transition={'0.2s ease-in'} position={'absolute'} right={'4'} zIndex={'5'}/>
+                                </PopoverTrigger>
+                                <PopoverContent>
+                                    <PopoverArrow></PopoverArrow>
+                                    <PopoverCloseButton></PopoverCloseButton>
+                                    <PopoverHeader>Results</PopoverHeader>
+                                    <PopoverBody>
+                                        {console.log(searchResults)}
+                                        {searchResults.map((result) => <p>{result.displayName}</p>)}
+                                    </PopoverBody>
+
+                                </PopoverContent>
+                            </Popover>
+
+                        
+                        
+                        
                         </Flex>
-                        <Text my={5} fontWeight={'bold'}>Friends</Text>
+                        <Flex alignItems={'center'}>
+                            <Text my={5} fontWeight={'bold'}>Friends</Text> 
+                            
+                            <Box borderRadius={'50%'} bg={'gray.700'} display={'flex'} alignItems={'center'} w={'25px'} h={'25px'} fontWeight={'bold'} justifyContent={'center'} ml={'15px'}>0</Box>
+                        </Flex>
                         
 
                         {friends.map((friend) => <Friend name={friend.displayName} profilePhoto={friend.photoURL} id={friend.uid} chatHandle={handleChatRoom}></Friend>)}

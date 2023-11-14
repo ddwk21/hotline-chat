@@ -2,9 +2,10 @@ import React, { useEffect, useRef } from 'react';
 import { useState } from 'react';
 import Message from './Message';
 import Friend from './Friend';
+import SearchedUser from './searchedUser';
 import { auth, db} from '../config/firebase';
 import { useAuth } from '../contexts/AuthContext';
-import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, where, getDocs, or} from 'firebase/firestore';
+import { addDoc, collection, onSnapshot, orderBy, query, serverTimestamp, where, getDocs, or, doc, getDoc,setDoc, updateDoc, arrayUnion, runTransaction} from 'firebase/firestore';
 
 import { Box, Button, Container, Flex, FormControl, IconButton, Input, InputGroup, Image, Center, Text, Icon, transition,   Popover,
     PopoverTrigger,
@@ -42,36 +43,68 @@ const Messages = () => {
     const friendsRef = collection(db, 'friends')
     const friendListRef = useRef(null)
 
+    const [friendTarget, setFriendTarget] = useState([]);
+
     const [searchValue, setSearchValue] = useState('')
 
-    // useEffect(() => {
-    //     let cancel = false;
+
+
     
-    //     const fetchData = async () => {
-    //         if (search.length >= 4) {
-    //             const lowercasedSearch = search.toLowerCase();
-    //             const prefixQuery = query(userRef, where("prefixes", "array-contains", lowercasedSearch));
-    //             const querySnapshot = await getDocs(prefixQuery);
-    //             const users = [];
-    //             querySnapshot.forEach((doc) => {
-    //                 users.push(doc.data());
-    //             });
-    //             if (!cancel) {
-    //                 setSearchResults(users);
-    //             }
-    //         } else {
-    //             if (!cancel) {
-    //                 setSearchResults([]);
-    //             }
-    //         }
-    //     };
+    const fetchData = async () => {
+        console.log('fetchData!')
+        console.log(search)
+        if (search.length >= 4) {
+            console.log('Search')
+            const lowercasedSearch = search.toLowerCase();
+            const prefixQuery = query(userRef, where("prefixes", "array-contains", lowercasedSearch));
+            const querySnapshot = await getDocs(prefixQuery);
+            const users = [];
+            querySnapshot.forEach((doc) => {
+                users.push(doc.data());
+            });
+            console.log(users)
+           setSearchResults(users);
+
+        } else {
+            setSearchResults([]);
+        }
+    };
+
+    const addFriend = async (targetUid) => {
+        console.log("AddFriend function triggered");
     
-    //     fetchData();
+        const updateFriendsList = async (userUid, friendUid) => {
+            // Query for the user's friends document
+            const userFriendsQuery = query(friendsRef, where("user", "==", userUid));
+            const userFriendsSnap = await getDocs(userFriendsQuery);
+            
+            if (userFriendsSnap.empty) {
+                // If document doesn't exist, create a new one with the friend UID
+                await addDoc(friendsRef, {
+                    user: userUid,
+                    friends: [friendUid]
+                });
+            } else {
+                // If document exists, update the friends array
+                const userFriendsDoc = userFriendsSnap.docs[0]; // Assuming there's only one document per user
+                await updateDoc(userFriendsDoc.ref, {
+                    friends: arrayUnion(friendUid)
+                });
+            }
+        };
     
-    //     return () => {
-    //         cancel = true;
-    //     };
-    // }, [search, userRef]);
+        try {
+            // Update the current user's and the target user's friends list
+            await updateFriendsList(currentUser.uid, targetUid);
+            await updateFriendsList(targetUid, currentUser.uid);
+    
+            console.log("Friends updated successfully");
+        } catch (e) {
+            console.error("Error updating friends: ", e);
+        }
+    };
+    
+
 
     useEffect(() => {
         const messagesQuery = query(messagesRef, where("room", "==", room), orderBy("createdAt"));
@@ -208,18 +241,18 @@ const Messages = () => {
 
                             <Popover>
 
-                                <Input type='text' bg={'gray.700'} border={'none'} pr={10} onChange={(e)=>setSearch(e.target.value)}></Input>
+                                <Input type='text' bg={'gray.700'} border={'none'} pr={10} onChange={(e) => {setSearch(e.target.value)}}></Input>
                                 
                                 <PopoverTrigger>
-                                    <Icon as={Search2Icon} _hover={{color:'gray.400', transition:'0.3s ease-in'}} transition={'0.2s ease-in'} position={'absolute'} right={'4'} zIndex={'5'}/>
+                                    <Icon as={Search2Icon} _hover={{color:'gray.400', transition:'0.3s ease-in'}} transition={'0.2s ease-in'} position={'absolute'} right={'4'} zIndex={'5'} onClick={() => {fetchData(search)}}/>
                                 </PopoverTrigger>
-                                <PopoverContent>
-                                    <PopoverArrow></PopoverArrow>
+                                <PopoverContent bg={'gray.700'} borderColor={'gray.800'}>
+                                    <PopoverArrow bg={'gray.700'} borderColor={'gray.800'}></PopoverArrow>
                                     <PopoverCloseButton></PopoverCloseButton>
-                                    <PopoverHeader>Results</PopoverHeader>
-                                    <PopoverBody>
+                                    <PopoverHeader borderColor={'gray.800'}>Results</PopoverHeader>
+                                    <PopoverBody bgColor={'gray.700'}>
                                         {console.log(searchResults)}
-                                        {searchResults.map((result) => <p>{result.displayName}</p>)}
+                                        {searchResults.map((result) => <SearchedUser user={result.displayName} addFriend={addFriend} uid={result.uid}/>)}
                                     </PopoverBody>
 
                                 </PopoverContent>

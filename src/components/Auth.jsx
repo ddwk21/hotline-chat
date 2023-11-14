@@ -55,7 +55,8 @@ const Auth = () => {
                 let prefixArray = []
                 for(let i = 3; i< name.length; i++){
                     let prefix = name.substring(0,i + 1);
-                    prefixArray.push(prefix);
+                    let lowerCasePrefix = prefix.toLowerCase();
+                    prefixArray.push(lowerCasePrefix);
                 }
                 return prefixArray;
             }

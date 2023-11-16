@@ -115,6 +115,17 @@ body{
   transform: rotate(45deg);
 }
 
+.messageTailTwo{
+  position: absolute;
+  background-color: inherit;
+  width: 10px;
+  height: 10px;
+  top: 65%;
+  right: -3px;
+  transform: rotate(-45deg);
+
+}
+
 /* .messages form{
   height: 30px;
   position: absolute;

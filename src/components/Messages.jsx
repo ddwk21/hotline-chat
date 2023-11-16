@@ -292,7 +292,7 @@ const Messages = () => {
                             borderRadius: '8px'
                             },
                         }} mt='10' className="messageContainer" ref={messageContainerRef}>
-                        {messages.map((message) => <Message h='100%' text={message.text}/>)}
+                        {messages.map((message) => <Message h='100%' text={message.text} sender={message.user.uid} currentUser={currentUser.uid}/>)}
                     </Flex>
                     
                     <form onSubmit={handleSubmit}>

@@ -126,6 +126,10 @@ body{
 
 }
 
+*:focus{
+  outline: none;
+}
+
 /* .messages form{
   height: 30px;
   position: absolute;

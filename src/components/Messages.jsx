@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useState } from 'react';
 import Message from './Message';
 import Friend from './Friend';
@@ -15,37 +15,45 @@ import { Box, Button, Container, Flex, FormControl, IconButton, Input, InputGrou
     PopoverFooter,
     PopoverArrow,
     PopoverCloseButton,
-    PopoverAnchor,} from '@chakra-ui/react';
+    PopoverAnchor,
+    Textarea,} from '@chakra-ui/react';
 import {Search2Icon} from '@chakra-ui/icons'
 import { color } from 'framer-motion';
+import { NONE } from 'phaser';
+import { auto } from '@popperjs/core';
 
 
 
 const Messages = () => {
 
-    const [room, setRoom] = useState("1")
+    const [room, setRoom] = useState("1");
 
-    const {logOut, currentUser} = useAuth()
+    const {logOut, currentUser} = useAuth();
 
-    const [newMessage, setNewMessage] = useState("")
-    const [messages, setMessages] = useState([])
+    const [newMessage, setNewMessage] = useState("");
+    const [messages, setMessages] = useState([]);
 
-    const [search, setSearch] = useState("")
-    const [searchResults, setSearchResults] = useState([])
+    const [search, setSearch] = useState("");
+    const [searchResults, setSearchResults] = useState([]);
 
-    const messagesRef = collection(db, "messages")
-    const messageContainerRef = useRef(null)
+    const messagesRef = collection(db, "messages");
+    const messageContainerRef = useRef(null);
 
-    const userRef = collection(db, 'users')
+    const userRef = collection(db, 'users');
     
-    const [friendIds, setFriendIds] = useState([])
-    const [friends, setFriends] = useState([])
-    const friendsRef = collection(db, 'friends')
-    const friendListRef = useRef(null)
+    const [friendIds, setFriendIds] = useState([]);
+    const [friends, setFriends] = useState([]);
+    const friendsRef = collection(db, 'friends');
+    const friendListRef = useRef(null);
 
     const [friendTarget, setFriendTarget] = useState([]);
 
-    const [searchValue, setSearchValue] = useState('')
+    const [searchValue, setSearchValue] = useState('');
+
+    const [status, setStatus] = useState('');
+    const [isEditing, setIsEditing] = useState(false);
+
+    const [online, setOnline] = useState(false);
 
 
 
@@ -63,8 +71,8 @@ const Messages = () => {
                 users.push(doc.data());
             });
             console.log(users)
-           setSearchResults(users);
-
+    
+            setSearchResults(users);
         } else {
             setSearchResults([]);
         }
@@ -77,6 +85,8 @@ const Messages = () => {
             // Query for the user's friends document
             const userFriendsQuery = query(friendsRef, where("user", "==", userUid));
             const userFriendsSnap = await getDocs(userFriendsQuery);
+
+            // check if the document is already on the user's friends list and filter it out if it is
             
             if (userFriendsSnap.empty) {
                 // If document doesn't exist, create a new one with the friend UID
@@ -138,6 +148,7 @@ const Messages = () => {
         return () => unsubscribe(); // Cleanup the listener
     }, [currentUser.uid]);
 
+    //fetch friend data if friendIds changes
     useEffect(() => {
         if(friendIds.length === 0) return;
     
@@ -155,6 +166,51 @@ const Messages = () => {
         console.log(friends)
         fetchFriendsData();
     }, [friendIds]);
+
+
+    useEffect(() => {
+        //fetch user's current status when component mounts 
+        const fetchStatus = async () => {
+
+            const userDoc = await getDoc(doc(userRef, currentUser.uid));
+
+            setStatus(userDoc.data().status || ''); // If status is undefined, set it to an empty string
+        }
+
+        fetchStatus();
+
+    },[]);
+
+    const handleStatusChange = (event) => {
+        setStatus(event.target.value);
+    };
+
+    const handleStatusSubmit = async (event) => {
+        if (event.type === 'keydown' && event.key !== 'Enter') {
+            return;
+        }
+    
+        console.log('Status Submit!')
+        //update user status in db 
+        await updateDoc(doc(userRef, currentUser.uid), { status: status });
+        //exit edit mode
+        setIsEditing(false);
+    };
+
+    //allow clicking anywhere on the page to remove focus from any currently focused element, unless that click is on the element itself
+    // useEffect(() => {
+    //     const handleClick = (event) => {
+    //         if (document.activeElement instanceof HTMLElement && event.target !== document.activeElement) {
+    //             document.activeElement.blur();
+    //         }
+    //     };
+
+    //     document.addEventListener('click', handleClick);
+
+    //     return () => {
+    //         document.removeEventListener('click', handleClick);
+    //     };
+    // }, []);
 
 
 
@@ -230,8 +286,17 @@ const Messages = () => {
 
                             </Image>
                         </Center>
-                        <Center borderBottom='1px' borderColor={'gray.700'} pb={5}>
+                        <Center  pb={5}>
                             <p>{currentUser.displayName}</p>
+
+                        </Center>
+                        <Center borderBottom='1px' borderColor={'gray.700'} textAlign={'center'}>
+                        {isEditing ? (
+                                <Textarea value={status} onChange={handleStatusChange} onKeyDown={handleStatusSubmit} onBlur={handleStatusSubmit} textAlign={'center'} bg={'none'} outline={'none'}  fontSize={'15px'} color={'gray.500'} borderWidth={0} resize={'none'} 
+                                minH={'30px'} height={auto}/>
+                            ) : (
+                                <Box onMouseDown={() => setIsEditing(true)} w={'100%'} h={auto} minH={'30px'} fontSize={'15px'} color={'gray.500'}>{status}</Box>
+                            )}
                         </Center>
                         
                         
@@ -252,7 +317,7 @@ const Messages = () => {
                                     <PopoverHeader borderColor={'gray.800'}>Results</PopoverHeader>
                                     <PopoverBody bgColor={'gray.700'}>
                                         {console.log(searchResults)}
-                                        {searchResults.map((result) => <SearchedUser user={result.displayName} addFriend={addFriend} uid={result.uid}/>)}
+                                        {searchResults.map((result) => <SearchedUser user={result.displayName} addFriend={addFriend} uid={result.uid} friendIds={friendIds}/>)}
                                     </PopoverBody>
 
                                 </PopoverContent>
@@ -304,6 +369,13 @@ const Messages = () => {
                                 px='20px'
                                 pr='90px'
                                 h='100%'
+                                focusBorderColor='gray.800'
+                                _hover={{
+                                    borderColor: 'gray.800',
+                                }}
+                                _focus={{
+                                    boxShadow: 'none',
+                                }}
                                 type="text"
                                 value={newMessage}
                                 onChange={(e) => setNewMessage(e.target.value)}/>

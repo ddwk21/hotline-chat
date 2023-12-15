@@ -16,11 +16,13 @@ import { Box, Button, Container, Flex, FormControl, IconButton, Input, InputGrou
     PopoverArrow,
     PopoverCloseButton,
     PopoverAnchor,
-    Textarea,} from '@chakra-ui/react';
+    Textarea,
+    filter,} from '@chakra-ui/react';
 import {Search2Icon} from '@chakra-ui/icons'
 import { color } from 'framer-motion';
 import { NONE } from 'phaser';
 import { auto } from '@popperjs/core';
+import InfoBar from './InfoBar';
 
 
 
@@ -54,6 +56,8 @@ const Messages = () => {
     const [isEditing, setIsEditing] = useState(false);
 
     const [online, setOnline] = useState(false);
+
+    const [roomFriendsObjects, setRoomFriendsObjects] = useState([]);
 
 
 
@@ -197,21 +201,6 @@ const Messages = () => {
         setIsEditing(false);
     };
 
-    //allow clicking anywhere on the page to remove focus from any currently focused element, unless that click is on the element itself
-    // useEffect(() => {
-    //     const handleClick = (event) => {
-    //         if (document.activeElement instanceof HTMLElement && event.target !== document.activeElement) {
-    //             document.activeElement.blur();
-    //         }
-    //     };
-
-    //     document.addEventListener('click', handleClick);
-
-    //     return () => {
-    //         document.removeEventListener('click', handleClick);
-    //     };
-    // }, []);
-
 
 
     const searchData = async () => {
@@ -250,6 +239,10 @@ const Messages = () => {
 
     const handleLogOut = async () => {
         try{
+            const currentUserRef = doc(db, 'users', auth.currentUser.uid);
+            updateDoc(currentUserRef, {
+                online: false
+            });
             await logOut(auth);
             console.log(currentUser)
         } catch (err) {
@@ -257,14 +250,28 @@ const Messages = () => {
         }
     }
 
+
+    //fires when a friend component is clicked and allows for creation of, or switching to an existing chat room.
+    // also sets the friendTarget state to the friend or friends' uids, which is used to display info about the chat room in sidebarRight.
     const handleChatRoom = (...ids) => {
+        console.log(ids);
         const sortedIDs = ids.sort();
 
         const chatID = sortedIDs.join('')
 
         console.log(chatID)
         setRoom(chatID);
-        console.log(room)
+        console.log(room);
+
+        let friendsInRoom = ids.filter((id) => id !== currentUser.uid);
+        console.log(friendsInRoom)
+
+        setFriendTarget(friendsInRoom);
+        console.log(friends)
+
+        let friendObjectsInRoom = friends.filter((friend) => friendsInRoom.includes(friend.uid));
+        setRoomFriendsObjects(friendObjectsInRoom);
+        console.log(roomFriendsObjects);
     }
     
     
@@ -390,7 +397,8 @@ const Messages = () => {
                     </form>
                     
                 </Box>
-                <Box w='15em' className="sidebarRight">
+                <Box flexGrow={1} className="sidebarRight">
+                    <InfoBar friendTarget={friendTarget} roomFriends={roomFriendsObjects} currentUser={currentUser.uid} room={room} profilePhoto={friendTarget.map(id => friends.find(friend => friend.uid === id)?.photoURL)}/>
                 </Box>
             </Flex>
         </Flex>

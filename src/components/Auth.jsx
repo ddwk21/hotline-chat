@@ -1,7 +1,7 @@
 import {useState, useRef} from 'react'
 
 import { auth, db } from "../config/firebase"
-import { addDoc, collection, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore'
+import { addDoc, collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, where } from 'firebase/firestore'
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { Center, Box, FormControl, FormLabel, FormErrorMessage, FormHelperText, Input, Button, Container, Flex, Heading} from '@chakra-ui/react'
@@ -42,7 +42,7 @@ const Auth = () => {
             return;
         }
         
-        //I DONT LIKE THIS DEBOUNCE AT IN PUT LEVEL INSTEAD LATER WHEN I HAVE TIME. K.
+        //I DONT LIKE THIS DEBOUNCE AT INPUT LEVEL INSTEAD LATER WHEN I HAVE TIME.
 
         try {
 
@@ -67,6 +67,8 @@ const Auth = () => {
                     email: newUser.email,
                     uid: newUser.uid,
                     prefixes: newUserPrefixArray,
+                    createdAt: serverTimestamp(),
+                    online: true
                 })
 
             await setDoc(doc(db, 'usernames', displayName), {

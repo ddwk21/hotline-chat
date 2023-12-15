@@ -1,7 +1,7 @@
 import React, {useContext, useEffect, useState} from 'react';
 import { createUserWithEmailAndPassword, signOut, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider} from 'firebase/auth';
 import { auth, db } from '../config/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 
 const AuthContext = React.createContext()
 const googleProvider = new GoogleAuthProvider()
@@ -39,12 +39,30 @@ export function AuthProvider({ children }) {
 
             if(!userSnap.exists()) {
 
+                const prefixes = (name) => {
+                    let prefixArray = []
+                    for(let i = 3; i< name.length; i++){
+                        let prefix = name.substring(0,i + 1);
+                        let lowerCasePrefix = prefix.toLowerCase();
+                        prefixArray.push(lowerCasePrefix);
+                    }
+                    return prefixArray;
+                }
+                let newUserPrefixArray = prefixes(displayName);
+
                 await setDoc(userRef, {
                     displayName: user.displayName,
                     email: user.email,
                     uid: user.uid,
+                    prefixes: newUserPrefixArray,
+                    createdAt: serverTimestamp(),
+                    online: true
                 });
+                
             }  
+            await updateDoc(userRef, {
+                online: true
+            });
         } catch (error) {
             console.error('Error signing in with Google: ', error);
         }
